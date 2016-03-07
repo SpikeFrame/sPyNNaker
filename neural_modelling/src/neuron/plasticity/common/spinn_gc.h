@@ -9,6 +9,7 @@
 //------------------------------------------------------------------------------
 
 #define COMPACTOR_FRAGMENTATION_FACTOR 4
+#define GENERATIONS_TO_USE 8
 
 #ifndef SPINN_GC
 #define SPINN_GC
@@ -24,9 +25,16 @@ typedef struct {
   post_event_history_t* buffers;
 } post_event_buffer_t;
 
+typedef struct {
+  uint32_t buffers_added;
+  uint32_t* buffers_in_generation;
+} generation_t;
+
 // Garbage collection variables.
 post_event_buffer_t post_event_buffers;
 void* address_in_sdram; // Working space for compactor.
+uint32_t generation_step;
+generation_t* generations;
 
 //------------------------------------------------------------------------------
 // Various debugging routines mainly to print out memory contents or
@@ -321,9 +329,10 @@ compactor will recycled the trace that we do not point to anymore.
 static inline scan_history_traces (post_event_buffer_t *post_event_buffers, int oldest_time) {
 
   profiler_write_entry(PROFILER_ENTER | PROFILER_SCAN_POST_BUFFER);
+  generation_t* current_generation_to_collect = &generations[(int)ceil(oldest_time / generation_step)];
 
-  for (int i = 0; i < post_event_buffers -> n_neurons; i++) {
-    post_event_history_t* buffer = &(post_event_buffers -> buffers)[i];
+  for (int i = 0; i < current_generation_to_collect -> buffers_added; i++) {
+    post_event_history_t* buffer = current_generation_to_collect -> buffers_in_generation[i];
     uint32_t recycled_traces = 0;
 
     for (int j = 0; j < buffer -> count_minus_one; j++) {
@@ -347,10 +356,35 @@ static inline scan_history_traces (post_event_buffer_t *post_event_buffers, int 
     buffer -> size -= recycled_traces * TRACE_SIZE;
     buffer -> count_minus_one -= recycled_traces;
 
+    // Move buffer to new generation
+    generation_t* generation_to_move_to = &generations[(int)ceil(buffer -> times[0]/generation_step)];
+    generation_to_move_to -> buffers_in_generation[generation_to_move_to -> buffers_added++] = buffer;
+    // Remove from this generation
+    for (int j = i; j <= current_generation_to_collect -> buffers_added - recycled_traces; j++)
+      current_generation_to_collect -> buffers_in_generation[j] =
+        current_generation_to_collect -> buffers_in_generation[j+1];
+    current_generation_to_collect -> buffers_added--;
+
   }
 
   profiler_write_entry(PROFILER_EXIT | PROFILER_SCAN_POST_BUFFER);
 
+}
+
+static inline bool initialize_generations(uint32_t simulation_ticks) {
+  generation_step = simulation_ticks / GENERATIONS_TO_USE;
+  log_info("Generation step %d", generation_step);
+  // Allocate space for generations
+  generations = spin1_malloc(GENERATIONS_TO_USE * sizeof(generation_t));
+  for (int i = 0; i < GENERATIONS_TO_USE; i++) {
+    generations[i].buffers_in_generation = spin1_malloc(post_event_buffers.n_neurons * sizeof(uint32_t));
+    if (generations[i].buffers_in_generation == NULL) {
+      log_error("Not enough memory for generation structures");
+      return false;
+    }
+    generations[i].buffers_added = 0;
+  }
+  return true;
 }
 
 //------------------------------------------------------------------------------
