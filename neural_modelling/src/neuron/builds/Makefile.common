@@ -74,7 +74,8 @@ SYNAPSE_TYPE_SOURCES += $(SOURCE_DIR)/neuron/c_main.c \
                         $(SOURCE_DIR)/neuron/population_table/population_table_binary_search_impl.c \
                         $(SOURCE_DIR)/neuron/plasticity/synapse_dynamics_static_impl.c
                        
-STDP += $(SOURCE_DIR)/neuron/plasticity/stdp/synapse_dynamics_stdp_mad_impl.c \
+STDP += $(SOURCE_DIR)/neuron/plasticity/stdp/synapse_dynamics_stdp_target_impl.c \
+		$(SOURCE_DIR)/neuron/plasticity/stdp/synapse_dynamics_stdp_mad_impl.c \
         $(SOURCE_DIR)/neuron/plasticity/stdp/synapse_dynamics_stdp_impl.c \
         $(SOURCE_DIR)/neuron/plasticity/common/post_events.c
 
