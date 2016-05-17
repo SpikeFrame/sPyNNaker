@@ -23,16 +23,6 @@
 #define _TIMING_TARGET_PAIR_IMPL_H_
 
 //---------------------------------------
-// Typedefines
-//---------------------------------------
-typedef int16_t post_trace_t;
-static post_trace_t timing_get_initial_post_trace();
-address_t timing_initialise(address_t address);
-static update_state_t timing_apply_post_spike(uint32_t time,
-		post_trace_t syn_signal, uint32_t last_pre_time,
-		update_state_t previous_state);
-
-//---------------------------------------
 // Includes
 //---------------------------------------
 #include "../synapse_structure/synapse_structure_weight_target.h"
@@ -63,6 +53,16 @@ static update_state_t timing_apply_post_spike(uint32_t time,
 // Externals
 //---------------------------------------
 extern int16_t tau_plus_lookup[TAU_PLUS_SIZE];
+
+//---------------------------------------
+// Typedefines
+//---------------------------------------
+typedef int16_t post_trace_t;
+static post_trace_t timing_get_initial_post_trace();
+address_t timing_initialise(address_t address);
+static update_state_t timing_apply_post_spike(uint32_t time,
+		post_trace_t syn_signal, uint32_t last_pre_time,
+		update_state_t previous_state);
 
 //---------------------------------------
 // Timing dependence inline functions
