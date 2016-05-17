@@ -9,7 +9,6 @@
 //---------------------------------------
 // Structures
 //---------------------------------------
-#include "synapse_structure.h"
 
 // Plastic synapse types are just weights;
 typedef struct plastic_synapse_t {
