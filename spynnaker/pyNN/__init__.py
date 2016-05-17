@@ -38,6 +38,8 @@ from spynnaker.pyNN.models.neuron.builds.izk_curr_exp \
     import IzkCurrExp as IZK_curr_exp
 from spynnaker.pyNN.models.neuron.builds.izk_cond_exp \
     import IzkCondExp as IZK_cond_exp
+from spynnaker.pyNN.models.neuron.builds.if_curr_target_exp \
+    import IFCurrExpTarget as IF_curr_exp_target
 
 # neural projections
 from spynnaker.pyNN.models.neural_projections\
@@ -97,7 +99,10 @@ from spynnaker.pyNN.models.neuron.plasticity.stdp.timing_dependence\
 from spynnaker.pyNN.models.neuron.plasticity.stdp.timing_dependence\
     .timing_dependence_pfister_spike_triplet\
     import TimingDependencePfisterSpikeTriplet as PfisterSpikeTripletRule
-
+from spynnaker.pyNN.models.neuron.plasticity.stdp.timing_dependence\
+    .timing_dependence_spike_target \
+    import TimingDependenceSpikeTarget as SpikeTargetRule
+    
 import spynnaker
 # constraints
 
