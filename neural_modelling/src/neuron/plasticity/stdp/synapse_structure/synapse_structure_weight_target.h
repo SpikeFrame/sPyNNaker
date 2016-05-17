@@ -3,14 +3,15 @@
 // this class copies and adds an 'accumulator' variable to the original 
 // synapse_structure_weight.h file for this purpose. -Eric
 
-#ifndef _SYNAPSE_STRUCUTRE_WEIGHT_TARGET_H_
-#define _SYNAPSE_STRUCUTRE_WEIGHT_TARGET_H_
+#ifndef _SYNAPSE_STRUCUTRE_WEIGHT_IMPL_H_
+#define _SYNAPSE_STRUCUTRE_WEIGHT_IMPL_H_
 
 //---------------------------------------
 // Structures
 //---------------------------------------
-// Plastic synapse contains normal 16-bit weight, a small state machine and an
-// accumulator
+#include "synapse_structure.h"
+
+// Plastic synapse types are just weights;
 typedef struct plastic_synapse_t {
     weight_t weight;
     int16_t accumulator; // accumulates updates for later synapse modification
@@ -25,10 +26,13 @@ typedef struct update_state_t {
     int32_t accumLast;   // last update: subtracted at time of doublet spikes
 } update_state_t;
 
+// The final state is just a weight as this is
+// both the weight and the synaptic word
 typedef plastic_synapse_t final_state_t;
 
-#include "synapse_structure.h"
-
+//---------------------------------------
+// Synapse interface functions
+//---------------------------------------
 static inline update_state_t synapse_structure_get_update_state(
         plastic_synapse_t synaptic_word, index_t synapse_type) {
 
@@ -71,6 +75,4 @@ static inline plastic_synapse_t synapse_structure_get_final_synaptic_word(
     return final_state;
 }
 
-#endif // _SYNAPSE_STRUCUTRE_WEIGHT_TARGET_H_
-
-
+#endif  // _SYNAPSE_STRUCUTRE_WEIGHT_IMPL_H_
