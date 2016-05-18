@@ -3,7 +3,7 @@ from spynnaker.pyNN.models.neuron.plasticity.stdp.synapse_structure.\
 import numpy
 
 
-class SynapseStructureWeightOnly(AbstractSynapseStructure):
+class SynapseStructureWeightTarget(AbstractSynapseStructure):
 
     def __init__(self):
         AbstractSynapseStructure.__init__(self)
