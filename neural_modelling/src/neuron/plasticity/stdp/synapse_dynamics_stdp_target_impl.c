@@ -9,7 +9,7 @@
 #include "../common/post_events.h"
 
 #include "weight_dependence/weight.h"
-#include "timing_dependence/timing.h"
+#include "timing_dependence/timing_target_pair_impl.h"
 #include <string.h>
 #include <debug.h>
 
@@ -59,7 +59,6 @@
 // Structures
 //---------------------------------------
 typedef struct {
-    pre_trace_t prev_trace;
     uint32_t prev_time;
 } pre_event_history_t;
 
@@ -67,6 +66,9 @@ post_event_history_t *post_event_history;
 
 // the last time a target spike passed through
 static uint32_t last_target_time = 900000000;
+
+// learningNow shows currently learning (=1) or currently not learning (=0)
+static uint8_t learningNow = 0;
 
 //---------------------------------------
 // Synapse update loop
@@ -232,13 +234,10 @@ bool synapse_dynamics_process_plastic_synapses(
 
     // Get last pre-synaptic event from event history
     const uint32_t last_pre_time = event_history->prev_time;
-    const pre_trace_t last_pre_trace = event_history->prev_trace;
 
     // Update pre-synaptic trace
     log_debug("Adding pre-synaptic event to trace at time:%u", time);
     event_history->prev_time = time;
-    event_history->prev_trace = timing_add_pre_spike(time, last_pre_time,
-                                                     last_pre_trace);
 
     // Loop through plastic synapses
     for (; plastic_synapse > 0; plastic_synapse--) {
@@ -285,13 +284,28 @@ void synapse_dynamics_process_post_synaptic_event(
         uint32_t time, index_t neuron_index) {
     log_debug("Adding post-synaptic event to trace at time:%u", time);
 
-    // Add post-event
+    // Get post-event history
     post_event_history_t *history = &post_event_history[neuron_index];
-    const uint32_t last_post_time = history->times[history->count_minus_one];
-    const post_trace_t last_post_trace =
-        history->traces[history->count_minus_one];
-    post_events_add(time, history, timing_add_post_spike(time, last_post_time,
-                                                         last_post_trace));
+
+    // io_printf(IO_BUF,"Adding spike to post event buffer at: %dms\n", time);
+
+    // The synaptic signals that can be sent to post-events:
+    // 0,4: A spike passed through a regular synapse...
+    //		0: Learning is ongoing, accumulate values
+    //      4: Learning is not happening, do not accumulate weight values
+
+	// learning pattern is ongoing
+	if (learningNow==1)
+	{
+		// Add post-event
+		post_events_add(time, history, 0);
+	}
+	// a learning pattern is not ongoing
+	else
+	{
+		// Add post-event
+		post_events_add(time, history, 4);
+	}
 }
 
 void synapse_dynamics_process_target_synaptic_event(
@@ -303,7 +317,7 @@ void synapse_dynamics_process_target_synaptic_event(
     post_event_history_t *history = &post_event_history[neuron_index];
 
     // The synaptic signals that can be added to post-events:
-    // 3-5: A spike passed through a target synapse and
+    // 1-3: A spike passed through a target synapse and
     //      1: Turning on Learning
     //      2: Learning is ongoing, accumulate values
     //      3: The current pattern has come to an end, update weight

@@ -77,7 +77,7 @@ static inline post_trace_t timing_get_initial_post_trace() {
 //      1: Turning on Learning
 //      2: Learning is ongoing, accumulate values
 //      3: The current pattern has come to an end, update weight
-
+//   4: Learning is not happening, do not accumulate weight values
 
 //---------------------------------------
 // This will apply an actual postsynaptic spike
