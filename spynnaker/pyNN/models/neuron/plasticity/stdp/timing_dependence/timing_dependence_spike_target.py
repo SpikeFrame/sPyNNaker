@@ -72,9 +72,6 @@ class TimingDependenceSpikeTarget(AbstractTimingDependence):
         self._tau_plus_last_entry = plasticity_helpers.write_exp_lut(
             spec, self._tau_plus, LOOKUP_TAU_PLUS_SIZE,
             LOOKUP_TAU_PLUS_SHIFT)
-        self._tau_minus_last_entry = plasticity_helpers.write_exp_lut(
-            spec, self._tau_minus, LOOKUP_TAU_MINUS_SIZE,
-            LOOKUP_TAU_MINUS_SHIFT)
 
     @property
     def synaptic_structure(self):
