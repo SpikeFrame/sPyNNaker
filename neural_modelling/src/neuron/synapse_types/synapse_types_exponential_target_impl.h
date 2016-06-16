@@ -20,6 +20,7 @@
 //---------------------------------------
 #define SYNAPSE_TYPE_BITS 2
 #define SYNAPSE_TYPE_COUNT 3
+#define SYNAPSE_TYPE_TARGET
 
 #include "../decay.h"
 #include <debug.h>

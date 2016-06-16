@@ -170,15 +170,17 @@ static inline void _process_fixed_synapses(
         // (should auto increment pointer in single instruction)
         uint32_t synaptic_word = *synaptic_words++;
 
-        // if this is an input from a target synapse;
-        if (strcmp(synapse_types_get_type_char(synapse_row_sparse_type(
-                                                   synaptic_word)), "T") == 0) {
 
-            // bypass the ring buffer and neuron, goto postsynaptic event buffer
-            synapse_dynamics_process_target_synaptic_event(time,
-                                       synapse_row_sparse_index(synaptic_word));
+#ifdef SYNAPSE_TYPE_TARGET
+        if(synapse_row_sparse_type(synaptic_word) == TARGET) {
+
+        	// bypass the ring buffer and neuron, goto postsynaptic event buffer
+        	synapse_dynamics_process_target_synaptic_event(time,
+        			synapse_row_sparse_index(synaptic_word));
         }
-        else {
+         else
+#endif
+         {
 			// Extract components from this word
 			uint32_t delay = synapse_row_sparse_delay(synaptic_word);
 			uint32_t combined_synapse_neuron_index = synapse_row_sparse_type_index(
