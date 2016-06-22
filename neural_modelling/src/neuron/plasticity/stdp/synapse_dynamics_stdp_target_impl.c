@@ -67,7 +67,13 @@ post_event_history_t *post_event_history;
 // the last time a target spike passed through
 static uint32_t last_target_time = 900000000;
 
-// learningNow shows currently learning (=1) or currently not learning (=0)
+// the last time a doublet passed through
+static uint32_t last_doublet_time = 900000000;
+
+// learningNow shows currently:
+//                              learning (=1) or
+//                              not learning (=0) or
+//                              doublet passed, potential step before triplet (=2)
 static uint8_t learningNow = 0;
 
 //---------------------------------------
@@ -300,12 +306,12 @@ void synapse_dynamics_process_post_synaptic_event(
 		// Add post-event
 		post_events_add(time, history, 0);
 	}
-	// a learning pattern is not ongoing
-	else
-	{
-		// Add post-event
-		post_events_add(time, history, 4);
-	}
+	//// a learning pattern is not ongoing
+	//else
+	//{
+	//	// Add post-event
+	//	post_events_add(time, history, 4);
+	//}
 }
 
 void synapse_dynamics_process_target_synaptic_event(
@@ -325,24 +331,36 @@ void synapse_dynamics_process_target_synaptic_event(
 	// if we have a doublet
 	if ((time - last_target_time) == 1)
 	{
-		// if we have a doublet and are currently NOT in a learning pattern
-		if (learningNow==0)
+
+		// if we have a triplet
+		if ((time - last_doublet_time) == 1)
 		{
-			// Turn on Learning (resets accumulators)
+			// Turn on Learning
 			learningNow = 1;
 
-			// Add post-event
+			// Add post-event  (3rd parameter: '1' resets accumulators)
 			post_events_add(time, history, 1);
 		}
 
-		// if we have a doublet and are currently in a learning pattern
+		// if we have a doublet and not a triplet
 		else
 		{
-			// Turn off Learning
-			learningNow = 0;
+			// if learning is off, record the doublet time
+			if (learningNow == 0)
+			{
+				last_doublet_time = time; // reset last_doublet_time to now
+				last_target_time  = time; // reset last_target_time to now
+			}
 
-			// Add post-event
-			post_events_add(time, history, 3);
+			// otherwise, reset learningNow, time to update synapses
+			else
+			{
+				// Turn off Learning
+				learningNow = 0;
+
+				// Add post-event
+				post_events_add(time, history, 3);
+			}
 		}
 	}
 
