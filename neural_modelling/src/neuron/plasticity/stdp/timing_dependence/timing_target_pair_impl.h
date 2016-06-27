@@ -60,9 +60,8 @@ extern int16_t tau_plus_lookup[TAU_PLUS_SIZE];
 typedef int16_t post_trace_t;
 static post_trace_t timing_get_initial_post_trace();
 address_t timing_initialise(address_t address);
-static update_state_t timing_apply_post_spike(uint32_t time,
-		post_trace_t syn_signal, uint32_t last_pre_time,
-		update_state_t previous_state);
+static update_state_t timing_apply_post_spike(uint32_t time_since_last_pre,
+		post_trace_t syn_signal, update_state_t previous_state);
 
 //---------------------------------------
 // Timing dependence inline functions
@@ -85,70 +84,70 @@ static inline post_trace_t timing_get_initial_post_trace() {
 // time          = postsynaptic (+ dendritic delay) or target spike time
 // last_pre_time = last presynaptic spike time
 static inline update_state_t timing_apply_post_spike(
-        uint32_t time, post_trace_t syn_signal, uint32_t last_pre_time,
-		update_state_t previous_state) {
+        uint32_t time_since_last_pre, post_trace_t syn_signal,
+		update_state_t previous_state)
+{
+	switch(syn_signal)
+	{
 
-    // Get time of event relative to last pre-synaptic event
-    uint32_t time_since_last_pre = time - last_pre_time;
+	// a spike came from a non-Target neuron
+	case 0:
 
-    // within learning pattern time frame
-    if (time_since_last_pre > 0)
-    {
+		// io_printf(IO_BUF,"time_since_last_pre: %dms\n", time_since_last_pre);
+		log_debug("\t\t\ttime_since_last_pre_event=%u\n",time_since_last_pre);
 
-		// a spike came from a non-Target neuron
-		if (syn_signal==0)
+		// add last synaptic update to accumulation
+		previous_state.accumulator += previous_state.accumLast;
+
+		// update the last accumulation
+		previous_state.accumLast = -1 * DECAY_LOOKUP_TAU_PLUS( time_since_last_pre);
+
+		break;
+
+	// a doublet passed through a Target synapse, starting learning
+	case 1:
+
+		previous_state.accumulator = 0; // reset accumulator to baseline
+		previous_state.accumLast   = 0; // reset accumLast to baseline
+
+		break;
+
+	// Learning is on and a spike passed through a Target synapse
+	case 2:
+
+		// add last synaptic update to accumulation
+		previous_state.accumulator += previous_state.accumLast;
+
+		// update the last accumulation
+		previous_state.accumLast = DECAY_LOOKUP_TAU_PLUS( time_since_last_pre);
+
+		break;
+
+	// Learning is on and a doublet passed through a Target synapse
+	case 3:
+
+		// Apply potentiation to state (which is a weight_state) if positive
+		if (previous_state.accumulator > 0)
 		{
-			// io_printf(IO_BUF,"time_since_last_pre: %dms\n", time_since_last_pre);
-			log_debug("\t\t\ttime_since_last_pre_event=%u\n",time_since_last_pre);
-
-			// add last synaptic update to accumulation
-			previous_state.accumulator += previous_state.accumLast;
-
-			// update the last accumulation
-			previous_state.accumLast = -1 * DECAY_LOOKUP_TAU_PLUS( time_since_last_pre);
+			previous_state.weight_state =
+					weight_one_term_apply_potentiation(
+							previous_state.weight_state,
+							previous_state.accumulator);
 		}
 
-		// a doublet passed through a Target synapse, starting learning
-		if (syn_signal==1)
+		// Apply depression to state (which is a weight_state) if negative
+		else if (previous_state.accumulator < 0)
 		{
-			previous_state.accumulator = 0; // reset accumulator to baseline
-			previous_state.accumLast   = 0; // reset accumLast to baseline
+			previous_state.weight_state =
+					weight_one_term_apply_depression(
+							previous_state.weight_state,
+							(-1 * previous_state.accumulator));
 		}
 
-		// Learning is on and a spike passed through a Target synapse
-		else if (syn_signal==2)
-		{
-			// add last synaptic update to accumulation
-			previous_state.accumulator += previous_state.accumLast;
+	} // end switch
 
-			// update the last accumulation
-			previous_state.accumLast = DECAY_LOOKUP_TAU_PLUS( time_since_last_pre);
-		}
-
-		// Learning is on and a doublet passed through a Target synapse
-		else if (syn_signal==3)
-		{
-			// Apply potentiation to state (which is a weight_state) if positive
-			if (previous_state.accumulator > 0)
-			{
-				previous_state.weight_state =
-						weight_one_term_apply_potentiation(
-								previous_state.weight_state,
-								previous_state.accumulator);
-			}
-
-			// Apply depression to state (which is a weight_state) if negative
-			else if (previous_state.accumulator < 0)
-			{
-				previous_state.weight_state =
-						weight_one_term_apply_depression(
-								previous_state.weight_state,
-								(-1 * previous_state.accumulator));
-			}
-		}
-
-		return previous_state;
-	}
+	return previous_state;
 }
+
 
 #endif // _TIMING_TARGET_PAIR_IMPL_H_

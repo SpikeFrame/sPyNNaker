@@ -109,9 +109,15 @@ static inline final_state_t _plasticity_update_synapse(
         log_debug("\t\tApplying post-synaptic event at delayed time:%u\n",
               delayed_post_time);
 
-        // Apply spike to state
-        current_state = timing_apply_post_spike( delayed_post_time,
-        		target_trace, delayed_last_pre_time, current_state);
+        // Get time of event relative to last pre-synaptic event
+        uint32_t time_since_last_pre = delayed_post_time - delayed_last_pre_time;
+
+        // Apply spike to state if temporal direction is OK
+        if (time_since_last_pre > 0)
+        {
+        	current_state = timing_apply_post_spike( time_since_last_pre,
+							target_trace, current_state);
+        }
 
         // Go onto next event
         post_window = post_events_next_delayed(post_window, delayed_post_time);
