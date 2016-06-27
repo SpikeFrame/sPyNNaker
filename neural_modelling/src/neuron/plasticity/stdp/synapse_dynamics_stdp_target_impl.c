@@ -366,6 +366,10 @@ void synapse_dynamics_process_target_synaptic_event(
 
 				// Add post-event
 				post_events_add(time, history, 3);
+
+				// learning is done, reset times to 0
+				last_doublet_time = 0;
+				last_target_time  = 0;
 			}
 		}
 	}
