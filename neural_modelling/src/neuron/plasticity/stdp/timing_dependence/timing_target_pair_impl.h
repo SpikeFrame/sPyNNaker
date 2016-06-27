@@ -91,11 +91,13 @@ static inline update_state_t timing_apply_post_spike(
     // Get time of event relative to last pre-synaptic event
     uint32_t time_since_last_pre = time - last_pre_time;
 
-    // a spike came from a non-Target neuron
-	if (syn_signal==0)
-	{
-	    if (time_since_last_pre > 0) // within learning pattern time frame
-	    {
+    // within learning pattern time frame
+    if (time_since_last_pre > 0)
+    {
+
+		// a spike came from a non-Target neuron
+		if (syn_signal==0)
+		{
 			// io_printf(IO_BUF,"time_since_last_pre: %dms\n", time_since_last_pre);
 			log_debug("\t\t\ttime_since_last_pre_event=%u\n",time_since_last_pre);
 
@@ -104,20 +106,17 @@ static inline update_state_t timing_apply_post_spike(
 
 			// update the last accumulation
 			previous_state.accumLast = -1 * DECAY_LOOKUP_TAU_PLUS( time_since_last_pre);
-	    }
-	}
+		}
 
-	// a doublet passed through a Target synapse, starting learning
-	if (syn_signal==1)
-	{
-		previous_state.accumulator = 0; // reset accumulator to baseline
-		previous_state.accumLast   = 0; // reset accumLast to baseline
-	}
+		// a doublet passed through a Target synapse, starting learning
+		if (syn_signal==1)
+		{
+			previous_state.accumulator = 0; // reset accumulator to baseline
+			previous_state.accumLast   = 0; // reset accumLast to baseline
+		}
 
-	// Learning is on and a spike passed through a Target synapse
-	else if (syn_signal==2)
-	{
-		if (time_since_last_pre > 0) // within learning pattern time frame
+		// Learning is on and a spike passed through a Target synapse
+		else if (syn_signal==2)
 		{
 			// add last synaptic update to accumulation
 			previous_state.accumulator += previous_state.accumLast;
@@ -125,31 +124,31 @@ static inline update_state_t timing_apply_post_spike(
 			// update the last accumulation
 			previous_state.accumLast = DECAY_LOOKUP_TAU_PLUS( time_since_last_pre);
 		}
-	}
 
-	// Learning is on and a doublet passed through a Target synapse
-	else if (syn_signal==3)
-	{
-		// Apply potentiation to state (which is a weight_state) if positive
-		if (previous_state.accumulator > 0)
+		// Learning is on and a doublet passed through a Target synapse
+		else if (syn_signal==3)
 		{
-			previous_state.weight_state =
-					weight_one_term_apply_potentiation(
-							previous_state.weight_state,
-							previous_state.accumulator);
+			// Apply potentiation to state (which is a weight_state) if positive
+			if (previous_state.accumulator > 0)
+			{
+				previous_state.weight_state =
+						weight_one_term_apply_potentiation(
+								previous_state.weight_state,
+								previous_state.accumulator);
+			}
+
+			// Apply depression to state (which is a weight_state) if negative
+			else if (previous_state.accumulator < 0)
+			{
+				previous_state.weight_state =
+						weight_one_term_apply_depression(
+								previous_state.weight_state,
+								(-1 * previous_state.accumulator));
+			}
 		}
 
-		// Apply depression to state (which is a weight_state) if negative
-		else if (previous_state.accumulator < 0)
-		{
-			previous_state.weight_state =
-					weight_one_term_apply_depression(
-							previous_state.weight_state,
-							(-1 * previous_state.accumulator));
-		}
+		return previous_state;
 	}
-
-    return previous_state;
 }
 
 #endif // _TIMING_TARGET_PAIR_IMPL_H_
