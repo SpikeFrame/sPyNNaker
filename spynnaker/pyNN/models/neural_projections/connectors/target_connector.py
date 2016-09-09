@@ -4,7 +4,7 @@ from spynnaker.pyNN.models.neural_projections.connectors.abstract_connector \
     import AbstractConnector
 
 
-class OneToOneConnector(AbstractConnector):
+class TargetConnector(AbstractConnector):
     """
     Where the pre- and postsynaptic populations have the same size, connect
     cell i in the presynaptic pynn_population.py to cell i in the postsynaptic
@@ -12,7 +12,7 @@ class OneToOneConnector(AbstractConnector):
     """
 
     def __init__(
-            self, weights=0.0, delays=1, space=None, safe=True, verbose=False):
+            self, weights=0.0, source=None, space=None, safe=True, delays=1, verbose=False):
         """
         :param weights:
             may either be a float, a !RandomDistribution object, a list/
@@ -24,14 +24,54 @@ class OneToOneConnector(AbstractConnector):
 
         """
         AbstractConnector.__init__(self, safe, space, verbose)
-        self._weights = weights
-        self._delays = delays
 
-        self._check_parameters(weights, delays)
+        if source == 'target':      # connection from target
+            self._weights = 1       # to output layer
+
+        elif source == 'output':    # connection from output neuron
+            self._weights = 2       # back onto itself
+
+        elif source == 'targetPre': # connection from target
+            self._weights = 3       # to previous layer
+
+        elif source == 'outputPre': # connection from output neuron
+            self._weights = 4       # to previous layer
+
+        elif source == 'hidden':    # connection from hidden neuron
+            self._weights = 5       # back onto itself
+
+        elif source == 'start':     # connection from target to start learning
+            self._weights = 6       # need 2: 1 previous layer, 1 output layer
+
+        elif source == 'stop':      # connection from target to stop learning
+            self._weights = 7       # need 2: 1 previous layer, 1 output layer
+
+        elif source == 'stopRegion':     # connection ending target range
+            self._weights = 8            # to output layer
+
+        elif source == 'stopRegionPre':  # connection ending target range
+            self._weights = 9            # to previous layer
+
+        elif source == 'startRegion':    # connection starting target range
+            self._weights = 10           # to output layer
+
+        elif source == 'startRegionPre': # connection starting target range
+            self._weights = 11           # to previous layer
+
+        else:
+            print "\nFor the TargetConnector, we need initialized:" 
+            print "source='target', source='output', source='targetPre' or source='outputPre'\n."
+            import sys
+            sys.exit()
+
+        self._delays = 1
+
+        self._check_parameters(self._weights, self._delays)
+
+        # print 'self._weights:', self._weights
 
     def get_delay_maximum(self):
-        return self._get_delay_maximum(
-            self._delays, max((self._n_pre_neurons, self._n_post_neurons)))
+        return 1
 
     def get_delay_variance(
             self, pre_slices, pre_slice_index, post_slices,
@@ -55,21 +95,7 @@ class OneToOneConnector(AbstractConnector):
             (pre_vertex_slice.hi_atom, post_vertex_slice.hi_atom))
         if min_hi_atom < max_lo_atom:
             return 0
-        if min_delay is None or max_delay is None:
-            return 1
-        if isinstance(self._delays, RandomDistribution):
-            return 1
-        elif numpy.isscalar(self._delays):
-            if self._delays >= min_delay and self._delays <= max_delay:
-                return 1
-            return 0
-        else:
-            connection_slice = slice(max_lo_atom, min_hi_atom + 1)
-            slice_min_delay = min(self._delays[connection_slice])
-            slice_max_delay = max(self._delays[connection_slice])
-            if slice_min_delay >= min_delay and slice_max_delay <= max_delay:
-                return 1
-            return 0
+        return 1
 
     def get_n_connections_to_post_vertex_maximum(
             self, pre_slices, pre_slice_index, post_slices,

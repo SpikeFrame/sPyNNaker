@@ -274,13 +274,21 @@ void neuron_do_timestep_update(timer_t time) {
         state_t result = neuron_model_state_update(
             exc_input, inh_input, external_bias, neuron);
 
+        //if ((time>=7000) && (time<=7500))
+        //    if ((exc_input_value>0) || (inh_input_value>0))
+        //        io_printf(IO_BUF,"%dms, voltage=%d    inh_input_value=%d\n", time, result, inh_input_value);
+                //io_printf(IO_BUF,"%dms, voltage=%d    exc_input_value=%d    inh_input_value=%d\n", time, neuron_model_get_membrane_voltage(neuron), exc_input_value, inh_input_value);
+
         // determine if a spike should occur
         bool spike = threshold_type_is_above_threshold(result, threshold_type);
 
         // If the neuron has spiked
         if (spike) {
-            log_debug("the neuron %d has been determined to spike",
-                      neuron_index);
+            log_debug("neuron %u spiked at time %u", neuron_index, time);
+
+        //if ((time>5500) && (time<9000))
+        //    io_printf(IO_BUF,"%dms, neuron spiked!\n", time);
+
 
             // Tell the neuron model
             neuron_model_has_spiked(neuron);

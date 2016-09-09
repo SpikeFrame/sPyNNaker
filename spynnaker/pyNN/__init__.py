@@ -38,6 +38,8 @@ from spynnaker.pyNN.models.neuron.builds.izk_curr_exp \
     import IzkCurrExp as IZK_curr_exp
 from spynnaker.pyNN.models.neuron.builds.izk_cond_exp \
     import IzkCondExp as IZK_cond_exp
+from spynnaker.pyNN.models.neuron.builds.if_curr_target_exp \
+    import IFCurrExpTarget as IF_curr_exp_target
 
 # neural projections
 from spynnaker.pyNN.models.neural_projections\
@@ -70,6 +72,8 @@ from spynnaker.pyNN.models.neural_projections.connectors.multapse_connector \
     import MultapseConnector
 from spynnaker.pyNN.models.neural_projections.connectors.one_to_one_connector \
     import OneToOneConnector
+from spynnaker.pyNN.models.neural_projections.connectors.target_connector \
+    import TargetConnector
 from spynnaker.pyNN.models.neural_projections.connectors.\
     distance_dependent_probability_connector import \
     DistanceDependentProbabilityConnector
@@ -89,6 +93,9 @@ from spynnaker.pyNN.models.neuron.plasticity.stdp.weight_dependence\
 from spynnaker.pyNN.models.neuron.plasticity.stdp.weight_dependence\
     .weight_dependence_multiplicative\
     import WeightDependenceMultiplicative as MultiplicativeWeightDependence
+from spynnaker.pyNN.models.neuron.plasticity.stdp.weight_dependence\
+    .weight_dependence_none\
+    import WeightDependenceNone as NoWeightDependence
 
 # STDP timing dependences
 from spynnaker.pyNN.models.neuron.plasticity.stdp.timing_dependence\
@@ -97,6 +104,9 @@ from spynnaker.pyNN.models.neuron.plasticity.stdp.timing_dependence\
 from spynnaker.pyNN.models.neuron.plasticity.stdp.timing_dependence\
     .timing_dependence_pfister_spike_triplet\
     import TimingDependencePfisterSpikeTriplet as PfisterSpikeTripletRule
+from spynnaker.pyNN.models.neuron.plasticity.stdp.timing_dependence\
+    .timing_dependence_spike_target \
+    import TimingDependenceSpikeTarget as SpikeTargetRule
 
 import spynnaker
 # constraints
